@@ -1,0 +1,59 @@
+# -*- coding: utf-8 -*-
+"""
+
+@author: Vadim
+"""
+
+import numpy as np
+import matplotlib.pyplot as plt
+from skimage import color
+from skimage.measure import label, regionprops
+
+image = plt.imread('balls_and_rects.png')
+hsv = color.rgb2hsv(image)
+binary = np.sum(image, 2) > np.zeros_like(image[:,:,1])
+labeled = label(binary)
+regions = regionprops(labeled)
+
+def count(regions, hsv):
+    balls = {}
+    rectangle = {}
+    for region in regions:
+        bbox = region.bbox
+        rectangle_area = (bbox[2]-bbox[0])*(bbox[3]-bbox[1])
+
+        if rectangle_area == region.area:
+            hue = hsv[bbox[0]:bbox[2], bbox[1]:bbox[3], 0]
+            clr = definition_color(hue)
+            if clr in rectangle:
+                rectangle[clr] += 1
+            else:
+                rectangle[clr] = 0
+        else:
+            hue = hsv[bbox[0]:bbox[2], bbox[1]:bbox[3], 0]
+            clr = definition_color(hue)
+            if clr in balls:
+                balls[clr] += 1
+            else:
+                balls[clr] = 0
+    return balls, rectangle, len(regions)
+
+def definition_color(hue):
+    clr = np.sort(np.unique(hue))[-1]*360
+    if clr > 330:
+        return 'red'
+    elif clr > 270:
+        return 'purple'
+    elif clr > 210:
+        return 'blued'
+    elif clr > 150:
+        return 'gray'
+    elif clr > 90:
+        return 'green'
+    elif clr > 30:
+        return 'yellow'
+    else:
+        return 'red' 
+
+balls, rectangle, amount = count(regions, hsv)
+print(f'Amount: {amount}\nBalls: {balls}\nRects: {rectangle}')
